@@ -140,7 +140,7 @@ class BillingPaymentServiceTest extends TestCase
             'status' => 'paid'
         ]);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Esta cobrança já foi processada ou não está pendente.');
 
         $this->billingPaymentService->processCreditCardPayment($billing, []);

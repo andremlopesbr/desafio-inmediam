@@ -21,6 +21,8 @@ class BillingController
         try {
             $payment = $paymentService->processCreditCardPayment($billing, $request->validated());
             return response()->json($payment);
+        } catch (\DomainException $e) {
+            return response()->json(['error' => $e->getMessage()], 409);
         } catch (AsaasException $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode() ?: 422);
         }

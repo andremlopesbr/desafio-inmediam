@@ -60,6 +60,23 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 
 ---
 
+### FINDING-005 — Ausência de controle de concorrência no pagamento
+
+**Status:** Concluído
+**Tasks:** KAN-07
+
+**Impacto:** Risco de cobranças duplicadas no gateway em requisições simultâneas.
+
+**Solução e Justificativa:**
+- Utilizado `DB::transaction()` com `lockForUpdate()` no registro de Billing para impedir race conditions locais.
+- Sem retry financeiro para ConnectionException a fim de evitar duplicação (se transacionado no gateway).
+- Trata-se de mitigação local. Evolução para a arquitetura seria o uso de idempotency keys/webhooks de reconciliação.
+
+**Arquivos alterados:**
+- `backend/app/Services/BillingPaymentService.php`
+
+---
+
 ## Correções realizadas
 
 ### KAN-02 — Baseline PostgreSQL
@@ -84,4 +101,5 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 | FINDING-002 | Resposta do gateway não validada | Concluído | KAN-05 |
 | FINDING-003 | Validação do pagamento | Concluído | KAN-04 |
 | FINDING-004 | Responsabilidades do BillingController | Concluído | KAN-05 / KAN-06 |
+| FINDING-005 | Ausência de controle de concorrência | Concluído | KAN-07 |
 | KAN-02 | Baseline PostgreSQL | Concluído | KAN-02 |

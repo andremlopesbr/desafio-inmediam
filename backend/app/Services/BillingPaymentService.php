@@ -17,46 +17,51 @@ class BillingPaymentService
 
     public function processCreditCardPayment(Billing $billing, array $validatedData): Payment
     {
-        if ($billing->status !== 'pending') {
-            throw new Exception("Esta cobrança já foi processada ou não está pendente.");
-        }
+        return DB::transaction(function () use ($billing, $validatedData) {
+            // Recarrega o model com lock pessimista
+            $lockedBilling = Billing::where('id', $billing->id)->lockForUpdate()->first();
 
-        $asaasCustomerId = $this->asaasService->findOrCreateCustomer($billing->customer);
+            if (!$lockedBilling || $lockedBilling->status !== 'pending') {
+                throw new \DomainException("Esta cobrança já foi processada ou não está pendente.");
+            }
 
-        $asaasPaymentId = $this->asaasService->createCreditCardCharge(
-            $asaasCustomerId,
-            $billing->amount,
-            $billing->due_date
-        );
+            $asaasCustomerId = $this->asaasService->findOrCreateCustomer($lockedBilling->customer);
 
-        $asaasPaymentResult = $this->asaasService->payWithCreditCard(
-            $asaasPaymentId,
-            $billing->customer,
-            $validatedData
-        );
+            $asaasPaymentId = $this->asaasService->createCreditCardCharge(
+                $asaasCustomerId,
+                $lockedBilling->amount,
+                $lockedBilling->due_date
+            );
 
-        // Apenas persiste se a chamada acima não lançou exceção
-        $creditCard = CreditCard::create([
-            'customer_id' => $billing->customer_id,
-            'card_holder_name' => $validatedData['card_holder_name'],
-            'card_last_four' => $asaasPaymentResult['card_last_four'],
-            'card_brand' => $asaasPaymentResult['card_brand'],
-            'card_token' => $asaasPaymentResult['card_token'],
-        ]);
+            $asaasPaymentResult = $this->asaasService->payWithCreditCard(
+                $asaasPaymentId,
+                $lockedBilling->customer,
+                $validatedData
+            );
 
-        $payment = Payment::create([
-            'billing_id' => $billing->id,
-            'credit_card_id' => $creditCard->id,
-            'amount_paid' => $billing->amount,
-            'status' => $asaasPaymentResult['status'],
-            'paid_at' => $asaasPaymentResult['status'] === 'CONFIRMED' ? now() : null,
-        ]);
+            // Apenas persiste se a chamada acima não lançou exceção
+            $creditCard = CreditCard::create([
+                'customer_id' => $lockedBilling->customer_id,
+                'card_holder_name' => $validatedData['card_holder_name'],
+                'card_last_four' => $asaasPaymentResult['card_last_four'],
+                'card_brand' => $asaasPaymentResult['card_brand'],
+                'card_token' => $asaasPaymentResult['card_token'],
+            ]);
 
-        if ($asaasPaymentResult['status'] === 'CONFIRMED') {
-            $billing->status = 'paid';
-            $billing->save();
-        }
+            $payment = Payment::create([
+                'billing_id' => $lockedBilling->id,
+                'credit_card_id' => $creditCard->id,
+                'amount_paid' => $lockedBilling->amount,
+                'status' => $asaasPaymentResult['status'],
+                'paid_at' => $asaasPaymentResult['status'] === 'CONFIRMED' ? now() : null,
+            ]);
 
-        return $payment;
+            if ($asaasPaymentResult['status'] === 'CONFIRMED') {
+                $lockedBilling->status = 'paid';
+                $lockedBilling->save();
+            }
+
+            return $payment;
+        });
     }
 }
