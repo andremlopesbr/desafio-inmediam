@@ -6,10 +6,11 @@ Registro incremental dos problemas identificados durante o desafio e das tasks r
 
 ### FINDING-001 — Configuração do Asaas hardcoded
 
-**Status:** Pendente  
+**Status:** Concluído
 **Task:** KAN-03
 
 A API Key e a URL do Asaas estão definidas diretamente no `BillingController`.
+*Correção: API Key e Base URL foram externalizadas para configuração de ambiente.*
 
 **Impacto:** exposição de credenciais e configuração acoplada ao código.
 
@@ -76,7 +77,7 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 
 | ID | Descrição | Status | Task |
 |---|---|---|---|
-| FINDING-001 | Configuração Asaas hardcoded | Pendente | KAN-03 |
+| FINDING-001 | Configuração Asaas hardcoded | Concluído | KAN-03 |
 | FINDING-002 | Resposta do gateway não validada | Pendente | KAN-05 |
 | FINDING-003 | Validação do pagamento | Pendente | KAN-04 / KAN-06 |
 | FINDING-004 | Responsabilidades do BillingController | Pendente | KAN-05 / KAN-06 |

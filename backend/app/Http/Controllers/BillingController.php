@@ -30,8 +30,8 @@ class BillingController
             return response()->json(['error' => 'Cobrança não encontrada'], 404);
         }
 
-        $apiKey = '$aact_YourSandboxKeyHere';
-        $baseUrl = "https://sandbox.asaas.com/api/v3";
+        $apiKey = config('services.asaas.api_key');
+        $baseUrl = config('services.asaas.base_url');
 
         $customer = Http::withHeaders(['access_token' => $apiKey])->post("$baseUrl/customers", [
             'name' => $billing->customer->name,
