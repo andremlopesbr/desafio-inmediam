@@ -6,6 +6,7 @@ use App\Exceptions\AsaasException;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class AsaasService
@@ -25,15 +26,35 @@ class AsaasService
         return Http::withHeaders(['access_token' => $this->apiKey])->timeout($this->timeout);
     }
 
-    private function handleResponse($response, string $errorMessage)
+    private function handleResponse($response, string $operation, string $errorMessage)
     {
         if ($response->failed()) {
+            $status = $response->status();
+            $code = null;
+            $description = null;
+            $json = $response->json();
+            if (is_array($json) && !empty($json['errors']) && is_array($json['errors'])) {
+                $code = $json['errors'][0]['code'] ?? null;
+                $description = $json['errors'][0]['description'] ?? null;
+            }
+
+            $logContext = [
+                'operation' => $operation,
+                'status' => $status,
+                'code' => $code,
+                'description' => $description,
+            ];
+
             if ($response->serverError()) {
-                throw new AsaasException("Serviço de pagamento temporariamente indisponível (HTTP {$response->status()}).", 502);
+                Log::error("Asaas Gateway Error", $logContext);
+                throw new AsaasException("Serviço de pagamento temporariamente indisponível (HTTP {$status}).", 502);
             }
             if ($response->clientError()) {
-                throw new AsaasException("{$errorMessage} (HTTP {$response->status()}).", 422);
+                Log::warning("Asaas Gateway Warning", $logContext);
+                $finalMessage = $description ? "{$errorMessage}: {$description} (HTTP {$status})." : "{$errorMessage} (HTTP {$status}).";
+                throw new AsaasException($finalMessage, 422);
             }
+            Log::error("Asaas Gateway Error - Unhandled", $logContext);
             throw new AsaasException("Erro inesperado na integração com gateway.", 502);
         }
 
@@ -53,7 +74,7 @@ class AsaasService
                 'cpfCnpj' => $customer->document
             ]);
 
-            $data = $this->handleResponse($response, "Falha ao buscar cliente no gateway");
+            $data = $this->handleResponse($response, 'find_customer', "Falha ao buscar cliente no gateway");
 
             if (!empty($data['data']) && isset($data['data'][0]['id'])) {
                 return (string) $data['data'][0]['id'];
@@ -67,7 +88,7 @@ class AsaasService
                 'notificationDisabled' => true,
             ]);
 
-            $data = $this->handleResponse($response, "Falha ao criar cliente no gateway");
+            $data = $this->handleResponse($response, 'create_customer', "Falha ao criar cliente no gateway");
 
             if (empty($data['id'])) {
                 throw new AsaasException("Falha ao criar cliente no gateway: ID não retornado.", 502);
@@ -90,7 +111,7 @@ class AsaasService
                 'dueDate' => $dueDate,
             ]);
 
-            $data = $this->handleResponse($response, "Falha ao registrar cobrança no gateway");
+            $data = $this->handleResponse($response, 'create_credit_card_charge', "Falha ao registrar cobrança no gateway");
 
             if (empty($data['id'])) {
                 throw new AsaasException("Falha ao registrar cobrança no gateway: ID não retornado.", 502);
@@ -124,7 +145,7 @@ class AsaasService
                 ],
             ]);
 
-            $data = $this->handleResponse($response, "Falha ao processar pagamento com cartão no gateway");
+            $data = $this->handleResponse($response, 'pay_with_credit_card', "Falha ao processar pagamento com cartão no gateway");
 
             if (empty($data['creditCard']['creditCardNumber']) || empty($data['creditCard']['creditCardBrand']) || empty($data['creditCard']['creditCardToken']) || empty($data['status'])) {
                 throw new AsaasException("Falha ao processar pagamento com cartão no gateway: dados do cartão não retornados corretamente.", 502);
