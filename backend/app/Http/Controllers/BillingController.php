@@ -7,7 +7,8 @@ use App\Models\CreditCard;
 use App\Models\Payment;
 use App\Http\Requests\PayBillingRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Http;
+use App\Services\Asaas\AsaasService;
+use App\Exceptions\AsaasException;
 
 class BillingController
 {
@@ -22,7 +23,7 @@ class BillingController
         return response()->json($billing);
     }
 
-    public function pay(string $id, PayBillingRequest $request): JsonResponse
+    public function pay(string $id, PayBillingRequest $request, AsaasService $asaasService): JsonResponse
     {
         $billing = Billing::find($id);
 
@@ -32,53 +33,31 @@ class BillingController
 
         $validated = $request->validated();
 
-        $apiKey = config('services.asaas.api_key');
-        $baseUrl = config('services.asaas.base_url');
+        try {
+            $asaasCustomerId = $asaasService->findOrCreateCustomer($billing->customer);
 
-        $customer = Http::withHeaders(['access_token' => $apiKey])->post("$baseUrl/customers", [
-            'name' => $billing->customer->name,
-            'email' => $billing->customer->email,
-            'cpfCnpj' => $billing->customer->document,
-            'notificationDisabled' => true, // ATENÇÃO: Não recomendo modificar, pois o Asaas envia notificações mesmo no ambiente de sandbox.
-        ]);
+            $asaasPaymentId = $asaasService->createCreditCardCharge(
+                $asaasCustomerId,
+                $billing->amount,
+                $billing->due_date
+            );
 
-        $customer = (object) $customer->json();
+            $asaasPaymentResult = $asaasService->payWithCreditCard(
+                $asaasPaymentId,
+                $billing->customer,
+                $validated
+            );
 
-        $charge = Http::withHeaders(['access_token' => $apiKey])->post("$baseUrl/payments", [
-            'customer' => $customer->id,
-            'billingType' => 'CREDIT_CARD',
-            'value' => $billing->amount,
-            'dueDate' => $billing->due_date,
-        ]);
-
-        $charge = (object) $charge->json();
-
-        $response = Http::withHeaders(['access_token' => $apiKey])->post("$baseUrl/payments/{$charge->id}/payWithCreditCard", [
-            'creditCard' => [
-                'holderName' => $validated['card_holder_name'],
-                'number' => $validated['card_number'],
-                'expiryMonth' => explode('/', $validated['expiry_date'])[0],
-                'expiryYear' => '20' . explode('/', $validated['expiry_date'])[1],
-                'ccv' => $validated['cvv'],
-            ],
-            'creditCardHolderInfo' => [
-                'name' => $billing->customer->name,
-                'email' => $billing->customer->email,
-                'cpfCnpj' => $billing->customer->document,
-                'phone' => '0000000000',
-                'postalCode' => '00000000',
-                'addressNumber' => '0',
-            ],
-        ]);
-
-        $response = (object) $response->json();
+        } catch (AsaasException $e) {
+            return response()->json(['error' => $e->getMessage()], $e->getCode() ?: 422);
+        }
 
         $credit_card = CreditCard::create([
             'customer_id' => $billing->customer_id,
             'card_holder_name' => $validated['card_holder_name'],
-            'card_last_four' => $response->creditCard['creditCardNumber'],
-            'card_brand' => $response->creditCard['creditCardBrand'],
-            'card_token' => $response->creditCard['creditCardToken'],
+            'card_last_four' => $asaasPaymentResult['card_last_four'],
+            'card_brand' => $asaasPaymentResult['card_brand'],
+            'card_token' => $asaasPaymentResult['card_token'],
         ]);
 
         $payment = Payment::create([

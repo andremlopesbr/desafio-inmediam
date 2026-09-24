@@ -20,10 +20,11 @@ A API Key e a URL do Asaas estão definidas diretamente no `BillingController`.
 
 ### FINDING-002 — Resposta do gateway não validada
 
-**Status:** Pendente  
+**Status:** Concluído
 **Task:** KAN-05
 
 A resposta do Asaas é utilizada sem validação prévia de sucesso, podendo gerar erros ao acessar propriedades inexistentes.
+*Correção: Extração da lógica para o AsaasService que agora valida HTTP e obriga a presença de chaves, lançando exceção AsaasException controlada.*
 
 **Impacto:** falhas externas podem resultar em exceções internas não controladas.
 
@@ -51,6 +52,7 @@ Dados do pagamento, incluindo `amount` e informações do cartão, chegam direta
 **Tasks:** KAN-05 / KAN-06
 
 O controller concentra integração HTTP, regra de negócio e persistência.
+*Atualização KAN-05: A integração HTTP externa foi removida para o AsaasService. A regra de negócio financeira e persistência aguardam a KAN-06.*
 
 **Impacto:** alto acoplamento e baixa testabilidade.
 
@@ -79,7 +81,7 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 | ID | Descrição | Status | Task |
 |---|---|---|---|
 | FINDING-001 | Configuração Asaas hardcoded | Concluído | KAN-03 |
-| FINDING-002 | Resposta do gateway não validada | Pendente | KAN-05 |
+| FINDING-002 | Resposta do gateway não validada | Concluído | KAN-05 |
 | FINDING-003 | Validação do pagamento | Concluído | KAN-04 |
 | FINDING-004 | Responsabilidades do BillingController | Pendente | KAN-05 / KAN-06 |
 | KAN-02 | Baseline PostgreSQL | Concluído | KAN-02 |
