@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Billing;
 use App\Models\CreditCard;
 use App\Models\Payment;
+use App\Http\Requests\PayBillingRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class BillingController
@@ -22,13 +22,15 @@ class BillingController
         return response()->json($billing);
     }
 
-    public function pay(string $id, Request $request): JsonResponse
+    public function pay(string $id, PayBillingRequest $request): JsonResponse
     {
         $billing = Billing::find($id);
 
         if (!Billing::where('id', $id)->first()) {
             return response()->json(['error' => 'Cobrança não encontrada'], 404);
         }
+
+        $validated = $request->validated();
 
         $apiKey = config('services.asaas.api_key');
         $baseUrl = config('services.asaas.base_url');
@@ -45,7 +47,7 @@ class BillingController
         $charge = Http::withHeaders(['access_token' => $apiKey])->post("$baseUrl/payments", [
             'customer' => $customer->id,
             'billingType' => 'CREDIT_CARD',
-            'value' => $request->amount,
+            'value' => $billing->amount,
             'dueDate' => $billing->due_date,
         ]);
 
@@ -53,11 +55,11 @@ class BillingController
 
         $response = Http::withHeaders(['access_token' => $apiKey])->post("$baseUrl/payments/{$charge->id}/payWithCreditCard", [
             'creditCard' => [
-                'holderName' => $request->card_holder_name,
-                'number' => $request->card_number,
-                'expiryMonth' => explode('/', $request->expiry_date)[0],
-                'expiryYear' => '20' . explode('/', $request->expiry_date)[1],
-                'ccv' => $request->cvv,
+                'holderName' => $validated['card_holder_name'],
+                'number' => $validated['card_number'],
+                'expiryMonth' => explode('/', $validated['expiry_date'])[0],
+                'expiryYear' => '20' . explode('/', $validated['expiry_date'])[1],
+                'ccv' => $validated['cvv'],
             ],
             'creditCardHolderInfo' => [
                 'name' => $billing->customer->name,
@@ -73,7 +75,7 @@ class BillingController
 
         $credit_card = CreditCard::create([
             'customer_id' => $billing->customer_id,
-            'card_holder_name' => $request->card_holder_name,
+            'card_holder_name' => $validated['card_holder_name'],
             'card_last_four' => $response->creditCard['creditCardNumber'],
             'card_brand' => $response->creditCard['creditCardBrand'],
             'card_token' => $response->creditCard['creditCardToken'],
@@ -82,7 +84,7 @@ class BillingController
         $payment = Payment::create([
             'billing_id' => $billing->id,
             'credit_card_id' => $credit_card->id,
-            'amount_paid' => $request->amount,
+            'amount_paid' => $billing->amount,
             'status' => $response->status,
             'paid_at' => now(),
         ]);

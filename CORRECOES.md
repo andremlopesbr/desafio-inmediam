@@ -33,10 +33,11 @@ A resposta do Asaas é utilizada sem validação prévia de sucesso, podendo ger
 
 ### FINDING-003 — Dados de pagamento sem validação adequada
 
-**Status:** Pendente  
-**Tasks:** KAN-04 / KAN-06
+**Status:** Concluído
+**Tasks:** KAN-04
 
 Dados do pagamento, incluindo `amount` e informações do cartão, chegam diretamente ao fluxo de cobrança sem um Form Request dedicado.
+*Correção: Criado PayBillingRequest para validar campos obrigatórios e o valor da cobrança agora provém estritamente do banco de dados (Billing).*
 
 **Impacto:** risco de dados inválidos ou manipulados alcançarem a regra de negócio e o gateway.
 
@@ -79,6 +80,6 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 |---|---|---|---|
 | FINDING-001 | Configuração Asaas hardcoded | Concluído | KAN-03 |
 | FINDING-002 | Resposta do gateway não validada | Pendente | KAN-05 |
-| FINDING-003 | Validação do pagamento | Pendente | KAN-04 / KAN-06 |
+| FINDING-003 | Validação do pagamento | Concluído | KAN-04 |
 | FINDING-004 | Responsabilidades do BillingController | Pendente | KAN-05 / KAN-06 |
 | KAN-02 | Baseline PostgreSQL | Concluído | KAN-02 |
