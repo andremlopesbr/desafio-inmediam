@@ -132,7 +132,7 @@ class AsaasService
 
             return [
                 'status' => $data['status'],
-                'card_last_four' => $data['creditCard']['creditCardNumber'],
+                'card_last_four' => substr($data['creditCard']['creditCardNumber'], -4),
                 'card_brand' => $data['creditCard']['creditCardBrand'],
                 'card_token' => $data['creditCard']['creditCardToken'],
             ];

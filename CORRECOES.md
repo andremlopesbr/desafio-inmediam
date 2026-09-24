@@ -77,6 +77,22 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 
 ---
 
+### FINDING-006 — Exposição de dados de cartão de crédito
+
+**Status:** Concluído
+**Tasks:** KAN-08
+
+**Impacto:** Risco de segurança e conformidade (exposição de PAN, CVV e Token de cobrança do cliente via payload de respostas JSON da API e potencial persistência insegura).
+
+**Solução e Justificativa:**
+- Os models e serviços garantem que os campos `card_number` (PAN completo) e `cvv` não sejam mapeados para persistência em Banco de Dados, extraindo da API parceira estritamente a máscara (`card_last_four`), nome (`card_holder_name`) e `card_brand`.
+- O `card_token` mantido na modelagem original foi preservado por questões de schema, porém tratado como dado sensível, incluído no vetor `$hidden` do `CreditCard` Model, inviabilizando que resvale em endpoints como o `GET /api/billing/{id}`.
+
+**Arquivos alterados:**
+- `backend/app/Models/CreditCard.php`
+
+---
+
 ## Correções realizadas
 
 ### KAN-02 — Baseline PostgreSQL
@@ -102,4 +118,5 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 | FINDING-003 | Validação do pagamento | Concluído | KAN-04 |
 | FINDING-004 | Responsabilidades do BillingController | Concluído | KAN-05 / KAN-06 |
 | FINDING-005 | Ausência de controle de concorrência | Concluído | KAN-07 |
+| FINDING-006 | Exposição de dados de cartão | Concluído | KAN-08 |
 | KAN-02 | Baseline PostgreSQL | Concluído | KAN-02 |
