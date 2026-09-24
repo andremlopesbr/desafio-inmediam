@@ -126,11 +126,12 @@ class AsaasService
 
             $data = $this->handleResponse($response, "Falha ao processar pagamento com cartão no gateway");
 
-            if (empty($data['creditCard']['creditCardNumber']) || empty($data['creditCard']['creditCardBrand']) || empty($data['creditCard']['creditCardToken'])) {
+            if (empty($data['creditCard']['creditCardNumber']) || empty($data['creditCard']['creditCardBrand']) || empty($data['creditCard']['creditCardToken']) || empty($data['status'])) {
                 throw new AsaasException("Falha ao processar pagamento com cartão no gateway: dados do cartão não retornados corretamente.", 502);
             }
 
             return [
+                'status' => $data['status'],
                 'card_last_four' => $data['creditCard']['creditCardNumber'],
                 'card_brand' => $data['creditCard']['creditCardBrand'],
                 'card_token' => $data['creditCard']['creditCardToken'],

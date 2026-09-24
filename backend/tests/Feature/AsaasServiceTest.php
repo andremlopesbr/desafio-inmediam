@@ -115,6 +115,7 @@ class AsaasServiceTest extends TestCase
     {
         Http::fake([
             '*/payments/*/payWithCreditCard' => Http::response([
+                'status' => 'CONFIRMED',
                 'creditCard' => [
                     'creditCardNumber' => '1234',
                     'creditCardBrand' => 'MASTERCARD',
@@ -133,6 +134,7 @@ class AsaasServiceTest extends TestCase
 
         $result = $this->service->payWithCreditCard('pay_123', $customer, $cardData);
 
+        $this->assertEquals('CONFIRMED', $result['status']);
         $this->assertEquals('1234', $result['card_last_four']);
         $this->assertEquals('MASTERCARD', $result['card_brand']);
         $this->assertEquals('tok_123', $result['card_token']);

@@ -48,11 +48,11 @@ Dados do pagamento, incluindo `amount` e informações do cartão, chegam direta
 
 ### FINDING-004 — BillingController com múltiplas responsabilidades
 
-**Status:** Pendente  
+**Status:** Concluído
 **Tasks:** KAN-05 / KAN-06
 
 O controller concentra integração HTTP, regra de negócio e persistência.
-*Atualização KAN-05: A integração HTTP externa foi removida para o AsaasService. A regra de negócio financeira e persistência aguardam a KAN-06.*
+*Atualização KAN-06: A regra de negócio financeira e persistência foram extraídas para o BillingPaymentService, deixando o BillingController responsável apenas pela interface HTTP e orquestração.*
 
 **Impacto:** alto acoplamento e baixa testabilidade.
 
@@ -83,5 +83,5 @@ O controller concentra integração HTTP, regra de negócio e persistência.
 | FINDING-001 | Configuração Asaas hardcoded | Concluído | KAN-03 |
 | FINDING-002 | Resposta do gateway não validada | Concluído | KAN-05 |
 | FINDING-003 | Validação do pagamento | Concluído | KAN-04 |
-| FINDING-004 | Responsabilidades do BillingController | Pendente | KAN-05 / KAN-06 |
+| FINDING-004 | Responsabilidades do BillingController | Concluído | KAN-05 / KAN-06 |
 | KAN-02 | Baseline PostgreSQL | Concluído | KAN-02 |

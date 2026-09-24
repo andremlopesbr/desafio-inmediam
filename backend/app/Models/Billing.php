@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Billing extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['customer_id', 'plan_id', 'amount', 'due_date', 'status'];
 
     public function plan()
     {
