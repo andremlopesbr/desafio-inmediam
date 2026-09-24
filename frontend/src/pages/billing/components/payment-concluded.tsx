@@ -2,7 +2,6 @@ import 'react-credit-cards-2/dist/es/styles-compiled.css'
 
 import { Badge } from '@inmediam/ui'
 import { CircleCheck } from 'lucide-react'
-import Cards from 'react-credit-cards-2'
 
 import { currencyFormatter } from '@/utils/formatter'
 
@@ -60,7 +59,7 @@ export function PaymentConcluded({ payment }: PaymentConcludedProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Data</span>
           <span className="text-sm text-foreground">
-            {payment.paid_at}
+            {new Date(payment.paid_at).toLocaleString('pt-BR')}
           </span>
         </div>
 

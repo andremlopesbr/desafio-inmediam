@@ -6,7 +6,7 @@ import MediamLogo from '@/assets/mediam.svg'
 
 export function Home() {
   return (
-    <div className="max- mx-auto flex min-h-screen w-full flex-col items-center justify-center gap-8 bg-muted p-6">
+    <div className="mx-auto flex min-h-screen w-full flex-col items-center justify-center gap-8 bg-muted p-6">
       <div className="w-1/3 rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-center gap-1">
           <img
