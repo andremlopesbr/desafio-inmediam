@@ -5,14 +5,14 @@ namespace Tests\Feature;
 use App\Models\Billing;
 use App\Models\Customer;
 use App\Models\Plan;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 use Carbon\Carbon;
 
 class PayBillingValidationTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     private $billing;
 
@@ -125,6 +125,10 @@ class PayBillingValidationTest extends TestCase
         $payload = $this->validPayload();
         $payload['cvv'] = '123';
         $this->postJson("/api/billing/{$this->billing->id}/pay", $payload)->assertStatus(200);
+
+        // Reset billing to pending for next assertion (first payment marked it paid)
+        Billing::where('id', $this->billing->id)->update(['status' => 'pending']);
+        $this->billing->refresh();
 
         $payload['cvv'] = '1234';
         $this->postJson("/api/billing/{$this->billing->id}/pay", $payload)->assertStatus(200);

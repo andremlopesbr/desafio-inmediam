@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Exceptions\AsaasException;
 use App\Models\Billing;
 use App\Models\Customer;
+use App\Models\Plan;
 use App\Services\Asaas\AsaasService;
 use App\Services\BillingPaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,11 +18,13 @@ class BillingPaymentServiceTest extends TestCase
 
     private $asaasServiceMock;
     private $billingPaymentService;
+    private $plan;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->plan = Plan::create(['name' => 'Test', 'price' => 100.00, 'description' => 'Test']);
         $this->asaasServiceMock = $this->createMock(AsaasService::class);
         $this->billingPaymentService = new BillingPaymentService($this->asaasServiceMock);
     }
@@ -30,6 +33,7 @@ class BillingPaymentServiceTest extends TestCase
     {
         $customer = Customer::create(['name' => 'John', 'document' => '123', 'email' => 'a@a.com']);
         $billing = Billing::create([
+            'plan_id' => $this->plan->id,
             'customer_id' => $customer->id,
             'amount' => 150.00,
             'due_date' => '2026-10-10',
@@ -81,13 +85,14 @@ class BillingPaymentServiceTest extends TestCase
             'status' => 'paid'
         ]);
 
-        $this->assertEquals('paid', $billing->status);
+        $this->assertEquals('paid', $billing->refresh()->status);
     }
 
     public function test_payment_failure_does_not_persist_payment_and_does_not_mark_paid()
     {
         $customer = Customer::create(['name' => 'John', 'document' => '123', 'email' => 'a@a.com']);
         $billing = Billing::create([
+            'plan_id' => $this->plan->id,
             'customer_id' => $customer->id,
             'amount' => 150.00,
             'due_date' => '2026-10-10',
@@ -134,7 +139,8 @@ class BillingPaymentServiceTest extends TestCase
     public function test_billing_must_be_pending_to_process_payment()
     {
         $billing = Billing::create([
-            'customer_id' => Customer::create(['name' => 'John', 'document' => '123'])->id,
+            'plan_id' => $this->plan->id,
+            'customer_id' => Customer::create(['name' => 'John', 'document' => '123', 'email' => 'a@a.com'])->id,
             'amount' => 150.00,
             'due_date' => '2026-10-10',
             'status' => 'paid'
@@ -148,8 +154,9 @@ class BillingPaymentServiceTest extends TestCase
 
     public function test_payment_with_rejected_status_does_not_mark_billing_as_paid()
     {
-        $customer = Customer::create(['name' => 'John', 'document' => '123']);
+        $customer = Customer::create(['name' => 'John', 'document' => '123', 'email' => 'a@a.com']);
         $billing = Billing::create([
+            'plan_id' => $this->plan->id,
             'customer_id' => $customer->id,
             'amount' => 150.00,
             'due_date' => '2026-10-10',

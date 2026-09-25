@@ -6,6 +6,7 @@ use App\Models\Billing;
 use App\Models\CreditCard;
 use App\Models\Customer;
 use App\Models\Payment;
+use App\Models\Plan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,8 +16,10 @@ class BillingControllerSecurityTest extends TestCase
 
     public function test_get_billing_does_not_expose_sensitive_card_data()
     {
+        $plan = Plan::create(['name' => 'Test', 'price' => 150.00, 'description' => 'Test']);
         $customer = Customer::create(['name' => 'John', 'document' => '123', 'email' => 'a@a.com']);
         $billing = Billing::create([
+            'plan_id' => $plan->id,
             'customer_id' => $customer->id,
             'amount' => 150.00,
             'due_date' => '2026-10-10',
