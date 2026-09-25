@@ -372,8 +372,15 @@ Registro completo dos problemas identificados no projeto legado, correções imp
 
 **Solução:** Adicionado `queryClient.invalidateQueries({ queryKey: ['billing', billingId] })` no `onSuccess` da mutation. Isso força o refetch automático dos dados da cobrança, atualizando a interface em tempo real.
 
-**Arquivos principais:** `payment-form.tsx`
+**Arquivos principais:** `payment-form.tsx`, `home.tsx`, `BillingController.php`
 **Task:** KAN-09 · **Status:** Concluído (working tree)
+
+**Complemento — Home desatualizada após pagamento:**
+Durante o smoke final foi identificado que a Home mantinha plano, cliente e status hardcoded, por isso não refletia o estado real da cobrança após o pagamento.
+
+**Correção:** a Home passou a consultar os billings pela API usando React Query e as mesmas query keys do fluxo de Billing. O endpoint `show()` também passou a carregar a relação `customer`.
+
+**Motivo:** manter o backend como fonte de verdade e garantir consistência visual entre Home e tela de cobrança.
 
 ---
 

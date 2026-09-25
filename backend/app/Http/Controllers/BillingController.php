@@ -12,7 +12,7 @@ class BillingController
 {
     public function show(Billing $billing): JsonResponse
     {
-        $billing->load(['plan', 'payments.creditCard']);
+        $billing->load(['customer', 'plan', 'payments.creditCard']);
         return response()->json($billing);
     }
 

@@ -1,8 +1,55 @@
 import { Badge } from '@inmediam/ui'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
 import InMediamShield from '@/assets/inmediam-shield.svg'
 import MediamLogo from '@/assets/mediam.svg'
+import { api } from '@/lib/api'
+
+function BillingLink({ id }: { id: string }) {
+  const {
+    data: billing,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['billing', id],
+    queryFn: async () => {
+      const response = await api.get(`/billing/${id}`)
+      return response.data
+    },
+  })
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[74px] animate-pulse items-center justify-between rounded-md border border-border bg-muted p-4" />
+    )
+  }
+
+  if (isError || !billing) {
+    return (
+      <div className="flex h-[74px] items-center justify-between rounded-md border border-red-200 bg-red-50 p-4">
+        <p className="text-sm text-red-500">Erro ao carregar cobrança {id}</p>
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      to={`/billing/${id}`}
+      className="flex items-center justify-between rounded-md border border-border p-4 transition-colors hover:bg-muted"
+    >
+      <div>
+        <p className="font-semibold text-foreground">{billing.plan?.name}</p>
+        <p className="text-sm text-muted-foreground">
+          {billing.customer?.name}
+        </p>
+      </div>
+      <Badge variant={billing.status === 'paid' ? 'success' : 'warning'}>
+        {billing.status === 'paid' ? 'Pago' : 'Pendente'}
+      </Badge>
+    </Link>
+  )
+}
 
 export function Home() {
   return (
@@ -26,27 +73,8 @@ export function Home() {
         </p>
 
         <div className="mt-6 space-y-3">
-          <Link
-            to="/billing/1"
-            className="flex items-center justify-between rounded-md border border-border p-4 transition-colors hover:bg-muted"
-          >
-            <div>
-              <p className="font-semibold text-foreground">Profissional</p>
-              <p className="text-sm text-muted-foreground">João da Silva</p>
-            </div>
-            <Badge variant="warning">Pendente</Badge>
-          </Link>
-
-          <Link
-            to="/billing/2"
-            className="flex items-center justify-between rounded-md border border-border p-4 transition-colors hover:bg-muted"
-          >
-            <div>
-              <p className="font-semibold text-foreground">Básico</p>
-              <p className="text-sm text-muted-foreground">Maria Oliveira</p>
-            </div>
-            <Badge variant="success">Pago</Badge>
-          </Link>
+          <BillingLink id="1" />
+          <BillingLink id="2" />
         </div>
       </div>
     </div>

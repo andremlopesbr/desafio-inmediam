@@ -139,9 +139,9 @@ class AsaasService
                     'name' => $customer->name,
                     'email' => $customer->email,
                     'cpfCnpj' => $customer->document,
-                    'phone' => '0000000000',
-                    'postalCode' => '00000000',
-                    'addressNumber' => '0',
+                    'phone' => '11999999999',
+                    'postalCode' => '66087230',
+                    'addressNumber' => '266',
                 ],
             ]);
 
