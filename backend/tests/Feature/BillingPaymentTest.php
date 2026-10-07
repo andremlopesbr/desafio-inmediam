@@ -50,20 +50,20 @@ class BillingPaymentTest extends TestCase
 
     public function test_inexistent_billing_returns_404()
     {
-        $response = $this->postJson('/api/billing/9999/pay', $this->validPayload);
+        $response = $this->postJson('/api/payment/9999', $this->validPayload);
         $response->assertStatus(404);
     }
 
     public function test_invalid_payload_returns_422()
     {
-        $response = $this->postJson("/api/billing/{$this->pendingBilling->id}/pay", []);
+        $response = $this->postJson("/api/payment/{$this->pendingBilling->id}", []);
         $response->assertStatus(422);
     }
 
     public function test_billing_already_paid_does_not_call_gateway()
     {
         Http::fake(); // Fake without defining URLs means any call throws error, or we can assert no calls.
-        $response = $this->postJson("/api/billing/{$this->paidBilling->id}/pay", $this->validPayload);
+        $response = $this->postJson("/api/payment/{$this->paidBilling->id}", $this->validPayload);
         
         $response->assertStatus(409);
         $response->assertJson(['error' => 'Esta cobrança já foi processada ou não está pendente.']);
@@ -88,7 +88,7 @@ class BillingPaymentTest extends TestCase
         $payload = $this->validPayload;
         $payload['amount'] = 0.01; // Manipulated amount
 
-        $response = $this->postJson("/api/billing/{$this->pendingBilling->id}/pay", $payload);
+        $response = $this->postJson("/api/payment/{$this->pendingBilling->id}", $payload);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('billings', ['id' => $this->pendingBilling->id, 'status' => 'paid']);
@@ -114,7 +114,7 @@ class BillingPaymentTest extends TestCase
             ]),
         ]);
 
-        $response = $this->postJson("/api/billing/{$this->pendingBilling->id}/pay", $this->validPayload);
+        $response = $this->postJson("/api/payment/{$this->pendingBilling->id}", $this->validPayload);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('billings', ['id' => $this->pendingBilling->id, 'status' => 'pending']);
@@ -129,7 +129,7 @@ class BillingPaymentTest extends TestCase
             }
         ]);
 
-        $response = $this->postJson("/api/billing/{$this->pendingBilling->id}/pay", $this->validPayload);
+        $response = $this->postJson("/api/payment/{$this->pendingBilling->id}", $this->validPayload);
 
         $response->assertStatus(504);
         $response->assertJson(['error' => 'Falha de conexão com o gateway de pagamento (timeout ou indisponibilidade).']);

@@ -412,6 +412,20 @@ Durante o smoke final foi identificado que a Home mantinha plano, cliente e stat
 **Arquivos principais:** `payment-form.tsx`
 **Task:** KAN-09 · **Status:** Concluído (working tree)
 
+### FINDING-025 — Chamadas de API espalhadas e rota de pagamento acoplada à cobrança
+
+**Classificação:** ARCHITECTURE
+
+**Problema:** Os componentes do frontend montavam diretamente as URLs de cobrança e pagamento e chamavam o cliente Axios genérico. O pagamento era exposto pela rota `POST /api/billing/{billing}/pay`.
+
+**Impacto:** O contrato HTTP ficava distribuído pela interface e tornava mudanças na API mais propensas a regressões. A rota também representava a operação como ação da cobrança, em vez de uma operação de pagamento do domínio.
+
+**Solução:** Centralizadas as chamadas de listagem, consulta e pagamento em `billingApi`, em `frontend/src/lib/api.ts`. O pagamento passou a usar `POST /api/payment/{billing}`; controller, serviço, payload de cartão e validações foram preservados. Testes de comportamento foram atualizados para a nova rota.
+
+**Arquivos:** `frontend/src/lib/api.ts`, `frontend/src/pages/home.tsx`, `frontend/src/pages/billing/billing.tsx`, `frontend/src/pages/billing/components/payment-form.tsx`, `backend/routes/api.php`, `backend/tests/Feature/BillingPaymentTest.php`, `backend/tests/Feature/PayBillingValidationTest.php`, `README.md`
+
+**Task:** KAN-12
+
 ---
 
 ## 6. Infraestrutura
@@ -558,3 +572,4 @@ O frontend requer a variável `VITE_API_URL` configurada em um arquivo `frontend
 | 022 | Classe CSS `max-` truncada | BUG/UX | Concluído | KAN-09 | working tree |
 | 023 | Frontend enviava `amount` na requisição | BUG/SECURITY | Concluído | KAN-09 | working tree |
 | 024 | Docker PostgreSQL sem versão fixada | CONFIG | Concluído | KAN-02 | `c3d6066` |
+| 025 | Chamadas API espalhadas e rota de pagamento acoplada à cobrança | ARCH | Concluído | KAN-12 | working tree |

@@ -9,4 +9,4 @@ Route::get('/', function () {
 
 Route::get('/billing', [BillingController::class, 'index']);
 Route::get('/billing/{billing}', [BillingController::class, 'show']);
-Route::post('/billing/{billing}/pay', [BillingController::class, 'pay']);
+Route::post('/payment/{billing}', [BillingController::class, 'pay']);

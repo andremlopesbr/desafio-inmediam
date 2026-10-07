@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
-import { api } from '@/lib/api'
+import { billingApi } from '@/lib/api'
 
 const paymentSchema = z.object({
   cardNumber: z
@@ -61,7 +61,7 @@ export function PaymentForm({ billingId }: PaymentFormProps) {
 
   const { mutateAsync: submitPayment, isPending } = useMutation({
     mutationFn: (data: PaymentFormData) =>
-      api.post(`/billing/${billingId}/pay`, {
+      billingApi.pay(billingId, {
         card_number: data.cardNumber,
         card_holder_name: data.holderName,
         expiry_date: data.expiryDate,

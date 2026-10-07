@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom'
 
 import InMediamShield from '@/assets/inmediam-shield.svg'
 import MediamLogo from '@/assets/mediam.svg'
-import { api } from '@/lib/api'
+import { billingApi } from '@/lib/api'
 import { currencyFormatter } from '@/utils/formatter'
 
 import { PaymentConcluded } from './components/payment-concluded'
@@ -16,10 +16,7 @@ export function Billing() {
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['billing', id],
-    queryFn: async () => {
-      const response = await api.get(`/billing/${id}`)
-      return response.data
-    },
+    queryFn: () => billingApi.get(id!),
   })
 
   if (isLoading) {

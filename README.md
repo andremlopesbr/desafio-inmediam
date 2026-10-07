@@ -143,7 +143,7 @@ desafio-inmediam/
 | Método | Rota                    | Descrição                            |
 | ------ | ----------------------- | ------------------------------------ |
 | GET    | `/api/billing/{id}`     | Retorna os detalhes de uma cobrança  |
-| POST   | `/api/billing/{id}/pay` | Processa o pagamento de uma cobrança |
+| POST   | `/api/payment/{id}`     | Processa o pagamento de uma cobrança |
 
 # Dados de teste (Seeds)
 

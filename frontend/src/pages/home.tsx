@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 import InMediamShield from '@/assets/inmediam-shield.svg'
 import MediamLogo from '@/assets/mediam.svg'
-import { api } from '@/lib/api'
+import { billingApi } from '@/lib/api'
 import {
   type BillingListItemViewModel,
   mapBillingListItem,
@@ -35,9 +35,9 @@ export function Home() {
   } = useQuery({
     queryKey: ['billings'],
     queryFn: async () => {
-      const response = await api.get('/billing')
-      return Array.isArray(response.data)
-        ? response.data.map((billing) => mapBillingListItem(billing))
+      const billings = await billingApi.list()
+      return Array.isArray(billings)
+        ? billings.map((billing) => mapBillingListItem(billing))
         : []
     },
   })
