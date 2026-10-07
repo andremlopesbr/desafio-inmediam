@@ -5,44 +5,20 @@ import { Link } from 'react-router-dom'
 import InMediamShield from '@/assets/inmediam-shield.svg'
 import MediamLogo from '@/assets/mediam.svg'
 import { api } from '@/lib/api'
+import {
+  type BillingListItemViewModel,
+  mapBillingListItem,
+} from '@/lib/billing-view-model'
 
-function BillingLink({ id }: { id: string }) {
-  const {
-    data: billing,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ['billing', id],
-    queryFn: async () => {
-      const response = await api.get(`/billing/${id}`)
-      return response.data
-    },
-  })
-
-  if (isLoading) {
-    return (
-      <div className="flex h-[74px] animate-pulse items-center justify-between rounded-md border border-border bg-muted p-4" />
-    )
-  }
-
-  if (isError || !billing) {
-    return (
-      <div className="flex h-[74px] items-center justify-between rounded-md border border-red-200 bg-red-50 p-4">
-        <p className="text-sm text-red-500">Erro ao carregar cobrança {id}</p>
-      </div>
-    )
-  }
-
+function BillingLink({ billing }: { billing: BillingListItemViewModel }) {
   return (
     <Link
-      to={`/billing/${id}`}
+      to={`/billing/${billing.id}`}
       className="flex items-center justify-between rounded-md border border-border p-4 transition-colors hover:bg-muted"
     >
       <div>
-        <p className="font-semibold text-foreground">{billing.plan?.name}</p>
-        <p className="text-sm text-muted-foreground">
-          {billing.customer?.name}
-        </p>
+        <p className="font-semibold text-foreground">{billing.planName}</p>
+        <p className="text-sm text-muted-foreground">{billing.customerName}</p>
       </div>
       <Badge variant={billing.status === 'paid' ? 'success' : 'warning'}>
         {billing.status === 'paid' ? 'Pago' : 'Pendente'}
@@ -52,6 +28,20 @@ function BillingLink({ id }: { id: string }) {
 }
 
 export function Home() {
+  const {
+    data: billings = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['billings'],
+    queryFn: async () => {
+      const response = await api.get('/billing')
+      return Array.isArray(response.data)
+        ? response.data.map((billing) => mapBillingListItem(billing))
+        : []
+    },
+  })
+
   return (
     <div className="mx-auto flex min-h-screen w-full flex-col items-center justify-center gap-8 bg-muted p-6">
       <div className="w-1/3 rounded-lg border border-border bg-card p-6 shadow-sm">
@@ -73,8 +63,28 @@ export function Home() {
         </p>
 
         <div className="mt-6 space-y-3">
-          <BillingLink id="1" />
-          <BillingLink id="2" />
+          {isLoading && (
+            <div className="flex h-[74px] animate-pulse items-center justify-between rounded-md border border-border bg-muted p-4" />
+          )}
+
+          {!isLoading && isError && (
+            <div className="flex h-[74px] items-center justify-between rounded-md border border-red-200 bg-red-50 p-4">
+              <p className="text-sm text-red-500">Erro ao carregar cobranças</p>
+            </div>
+          )}
+
+          {!isLoading && !isError && billings.length === 0 && (
+            <div className="flex h-[74px] items-center justify-between rounded-md border border-border bg-muted p-4">
+              <p className="text-sm text-muted-foreground">
+                Nenhuma cobrança encontrada.
+              </p>
+            </div>
+          )}
+
+          {!isLoading && !isError &&
+            billings.map((billing) => (
+              <BillingLink key={billing.id} billing={billing} />
+            ))}
         </div>
       </div>
     </div>

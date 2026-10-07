@@ -7,5 +7,6 @@ Route::get('/', function () {
     return response()->json(['message' => 'ok']);
 });
 
+Route::get('/billing', [BillingController::class, 'index']);
 Route::get('/billing/{billing}', [BillingController::class, 'show']);
 Route::post('/billing/{billing}/pay', [BillingController::class, 'pay']);
